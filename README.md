@@ -12,7 +12,7 @@ A typical failing in programming with allocated memory is buffer overflow, or bo
 
 I’ve attached all of the necessary files below including a basic test program which demonstrates how to use the tracker.
  
-To use this version (currently only works with MSVC), simply include ```memTrack.c/h```, and ```memTracker.h``` in your project files, and add the following line to your program,
+To use this version (currently only works with MSVC), simply include ```memTrack.h, memTrack.c```, and ```memTracker.h``` in your project files, and add the following line to your program:
  
 ```#include "memTracker.h".```
  
