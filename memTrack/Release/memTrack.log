@@ -1,0 +1,6 @@
+﻿  debugMalloc.c
+  main.c
+  Generating code
+  All 4 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  memTrack.vcxproj -> C:\Users\Jim\Documents\Visual Studio 2017\Projects\memTrack\Release\memTrack.exe
