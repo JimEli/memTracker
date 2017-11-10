@@ -158,9 +158,9 @@ bool fResizeMemory(void **ppv, size_t sizeNew) {
 	pbNew = (uint8_t *)realloc(*ppv, sizeNew);
 	if (pbNew != NULL) {
 #ifdef _DEBUG
-		UpdateBlockInfo(*ppv, pbNew, sizeNew);
+		UpdateBlockInfo(*ppb, pbNew, sizeNew);
 		if (sizeNew > sizeOld)
-			memset(pbNew + sizeOld, _deadLandFill, sizeNew - sizeOld);
+			memset(pbNew + sizeOld, _cleanLandFill, sizeNew - sizeOld);
 	}
 #endif
 	*ppb = pbNew;
