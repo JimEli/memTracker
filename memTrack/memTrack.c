@@ -8,14 +8,6 @@
 // Pointer to head of memory blockinfo list.
 static blockinfo *pbiHead = NULL;
 
-// Designate pointer as valid.
-void clearMemoryStatus(void) {
-	blockinfo *pbi;
-
-	for (pbi = pbiHead; pbi != NULL; pbi = pbi->pbiNext)
-		pbi->free = false;
-}
-
 // Desigante pointer as free.
 void setMemoryStatus(void *pv) {
 	blockinfo *pbi;
@@ -85,7 +77,7 @@ static size_t sizeOfBlock(uint8_t *pMem) {
 static void checkMemory(void) {
 	blockinfo *pbi = pbiHead;
 
-	// Walk the allocated memory blockinfo structure list.
+	// Walk the allocated memory blockinfo list.
 	while (pbi != NULL) {
 		blockinfo *next = pbi->pbiNext;
 
