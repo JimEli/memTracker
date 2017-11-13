@@ -20,6 +20,7 @@ void clearMemoryStatus(void) {
 void setMemoryStatus(void *pv) {
 	blockinfo *pbi;
 
+	assert(pv != NULL);
 	pbi = getBlockInfo((uint8_t *)pv);
 	pbi->free = true;
 }
@@ -28,6 +29,7 @@ void setMemoryStatus(void *pv) {
 static blockinfo *getBlockInfo(uint8_t *pMem) {
 	blockinfo *pbi;
 
+	assert(pMem != NULL);
 	for (pbi = pbiHead; pbi != NULL; pbi = pbi->pbiNext) {
 		uint8_t *pbStart = pbi->pb;
 		uint8_t *pbEnd = pbi->pb + pbi->size - 1;
@@ -68,7 +70,7 @@ static void freeBlockInfo(uint8_t *pbMemToFree) {
 		pbiPrev = pbi;
 	}
  	assert(pbi != NULL);
-	//memset(pbi, _deadLandFill, sizeof(blockinfo));
+	memset(pbi, _deadLandFill, sizeof(blockinfo));
 	free(pbi);
 }
 
@@ -90,6 +92,7 @@ static void checkMemory(void) {
 		if (pbi->pb != NULL) {
 			// Get size of memory block.
 			size_t size = pbi->size;
+			// Has memory been freed?
 			if (!pbi->free) 
 				printf("*** WARNING: Memory not free'd at 0x%p\n", pbi->pb);
 			else 
@@ -99,9 +102,9 @@ static void checkMemory(void) {
 						printf("*** WARNING: Free'd memory access detected at 0x%p\n", pbi->pb + i);
 
 			// Free memory and blockinfo for this pointer.
-			free((uint8_t *)pbi->pb - MALLOC_START);
+			free((uint8_t *)pbi->pb - MALLOC_START_OFFSET);
 			freeBlockInfo((uint8_t *)pbi->pb);
-
+			
 			pbi = next;
 		}
 	}
@@ -123,11 +126,10 @@ void __Exit(int const status) {
 }
 
 // Our replacement for malloc().
-void *_Malloc(size_t nSize, char *file, int line) {
+void *__Malloc(size_t nSize, char *file, int line) {
 	// Attempt to allocate requested size + padding.
 	void *pMem = malloc(nSize + MALLOC_PADDING);
-
-	if (createBlockInfo((uint8_t *)pMem + MALLOC_START, nSize)) {
+	if (pMem != NULL && createBlockInfo((uint8_t *)pMem + MALLOC_START_OFFSET, nSize)) {
 		// Paint the memory as uninitailized.
 		memset((uint8_t *)pMem, _cleanLandFill, nSize + MALLOC_PADDING);
 
@@ -136,29 +138,29 @@ void *_Malloc(size_t nSize, char *file, int line) {
 
 		// Print statistics.
 		fprintf(stdout, "malloc: %s, line #%d\n", file, line);
-		fprintf(stdout, " 0x%p, size: %d, total: %d\n", (uint8_t *)pMem + MALLOC_START, nSize, totalMemory);
+		fprintf(stdout, " 0x%p, size: %d, total: %d\n", (uint8_t *)pMem + MALLOC_START_OFFSET, nSize, totalMemory);
 
 		// Retun memory requested.
-		return((uint8_t *)pMem + MALLOC_START);
+		return((uint8_t *)pMem + MALLOC_START_OFFSET);
 	}
 	return NULL;
 }
 
 // Our replacement for free().
-void _Free(void *pMem, char *file, int line) {
+void __Free(void *pMem, char *file, int line) {
 	if (pMem) {
 		size_t size = sizeOfBlock((uint8_t *)pMem);
 		assert(totalMemory >= size);
 
 		setMemoryStatus(pMem);
 		// Check for memory access under-run.
-		uint8_t *pPad = (uint8_t *)pMem - MALLOC_START;
-		for (int i = 0; i < MALLOC_PADDING / 2; i++)
+		uint8_t *pPad = (uint8_t *)pMem - MALLOC_START_OFFSET;
+		for (int i = 0; i < MALLOC_PADDING_LENGTH; i++)
 			if (*(pPad + i) != _cleanLandFill)
 				printf("*** WARNING: Memory under-run detected at 0x%p\n", pPad);
 		// Check for memory access over-run.
 		pPad = (uint8_t *)pMem + size;
-		for (int i = 0; i < MALLOC_PADDING / 2; i++)
+		for (int i = 0; i < MALLOC_PADDING_LENGTH; i++)
 			if (*(pPad + i) != _cleanLandFill)
 				printf("*** WARNING: Memory over-run detected at 0x%p\n", pPad + i);
 		// Decrement memory count.
