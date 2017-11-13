@@ -5,7 +5,7 @@
 // Add debug memory allocation routines.
 #include "memTracker.h"
 
-#define COUNT 3 //Number of character mallocs.
+#define COUNT 4 //Number of character mallocs.
 
 #ifdef _MSC_VER
 // C/C++ Preprocessor Definitions: _CRT_SECURE_NO_WARNINGS
@@ -43,17 +43,20 @@ int main(void) {
 	pStruct = (struct test *)malloc(sizeof(struct test));
 
 	// fill allocated memory with value.
-	*pChar[1] = 'A';
+	*pChar[0] = 'A';
+	// This line will cause an under-run error.
+	*(pChar[1] - 1) = 'X';
 	// This line will cause an over-run error.
-	*(pChar[0] + 1) = 'X';
+	*(pChar[2] + 1) = 'X';
 
 	// Free some of the memory.
 	fputs("\n", stdout);
 	free(pInt);
+	// This line cause memory access after free warning.
+	*pInt = 0x12345678;
 	free(pStruct);
 	// This loop doesn't free all the allocated memory, producing an error report on exit.
 	for (int i = 0; i < COUNT - 1; i++)
-//	for (int i = 0; i < COUNT; i++)
 			if (pChar[i])
 			free(pChar[i]);
 
