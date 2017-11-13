@@ -24,8 +24,9 @@ typedef struct BLOCKINFO {
 } blockinfo;
 
 // Memory allocation is expanded by padding amount (equally spaced before/after actual).
-#define MALLOC_PADDING 16
-#define MALLOC_START   (MALLOC_PADDING / 2)
+#define MALLOC_PADDING        16
+#define MALLOC_PADDING_LENGTH (MALLOC_PADDING / 2)
+#define MALLOC_START_OFFSET   (MALLOC_PADDING / 2)
 
 // Memory paint values.
 static unsigned char _deadLandFill = 0xDD;  // Fill free objects with this value.
@@ -35,8 +36,8 @@ static unsigned char _cleanLandFill = 0xCC; // Fill new objects with this value.
 static size_t totalMemory = 0;
 
 // Redirection function definitions.
-void *_Malloc(size_t, char *, int);
-void _Free(void *, char *, int);
+void *__Malloc(size_t, char *, int);
+void __Free(void *, char *, int);
 void __Exit(int const);
 
 // Internal function definitions.
