@@ -1,18 +1,47 @@
-// Simple memory tracker test code.
+/*************************************************************************
+* Title: memTracker test.
+* File: test_memTracker.c
+* Author: James Eli
+* Date: 11/13/2017
+*
+* This program performs a simple test of the memTracker memory allocation
+* tracking code. 
+*
+* 1. We allocate the following memory: 4 separate characters, 1 integer 
+*    and 1 structure via calls to malloc().
+* 2. To demonstrate under/over run detection, the program will access
+*    memory above and below 2 of the character allocation addresses.
+* 3. To demonstrate using a pointer after it has been released, we free 
+*    the integer pointer and then store a value using it's invalid pointer.
+* 4. Free is called twice using the same character pointer to activate the 
+*    warning associated with multiple calls to free using the same pointer.
+* 5. Finally, the program fails to free 1 character pointer prior to calling 
+*    exit() in order to demonstrate the warning associated with a memory 
+*    leak.
+*
+* Notes:
+*  (1) Compiled with MS Visual Studio 2017 Community (v141), using C
+*      language options.
+*  (2) Only compiles in the Debug version of project.
+*  (3) Released into the public domain.
+*************************************************************************
+* Change Log:
+*   11/13/2017: Initial release. JME
+*************************************************************************/
 #include <stdlib.h>
 #include <stdio.h>
 
 // Add debug memory allocation routines.
 #include "memTracker.h"
 
-#define COUNT 4 //Number of character mallocs.
+#define COUNT 4 // Number individual character allocations.
 
 #ifdef _MSC_VER
 // C/C++ Preprocessor Definitions: _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable:4996) 
 #endif
 
-// Test memory structure.
+// A simple test memory structure.
 struct test {
 	char c;
 	int i;
@@ -20,18 +49,12 @@ struct test {
 };
 
 int main(void) {
-	// Pointers used for test memory allocation.
+	// Pointers used for testing memory allocation.
 	struct test *pStruct;
 	char *pChar[COUNT];
 	int *pInt;
 
-	// Required to make eclipse console output work properly.
-	setvbuf(stdout, NULL, _IONBF, 0);
-	fflush(stdout);
-
-	fputs("Tesing debugMalloc & debugFree.\n\n", stdout);
-
-	// Allocate some memory.
+	// Allocate memory via calling malloc().
 	for (int i = 0; i < COUNT; i++) {
 		pChar[i] = (char *)malloc(sizeof(char));
 		if (pChar[i] == NULL) {
@@ -42,23 +65,25 @@ int main(void) {
 	pInt = (int *)malloc(sizeof(int) * 1024);
 	pStruct = (struct test *)malloc(sizeof(struct test));
 
-	// fill allocated memory with value.
-	*pChar[0] = 'A';
-	// This line will cause an under-run error.
-	*(pChar[1] - 1) = 'X';
-	// This line will cause an over-run error.
-	*(pChar[2] + 1) = 'X';
+	*pChar[0] = 'A';        // Fill allocated memory with value.
+	*(pChar[1] - 1) = 'X';	// Causes an under-run error.
+	*(pChar[2] + 1) = 'X';	// Causes an over-run error.
 
-	// Free some of the memory.
-	fputs("\n", stdout);
 	free(pInt);
-	// This line cause memory access after free warning.
-	*pInt = 0x12345678;
+	*pInt = 0x12345678;	    // Causes warning for memory access after free().
 	free(pStruct);
-	// This loop doesn't free all the allocated memory, producing an error report on exit.
+	free(pChar[0]);         // Causes a previous memory free warning. 
+
+	// This loop doesn't free all the allocated memory, therefore producing a warning upon exit.
 	for (int i = 0; i < COUNT - 1; i++)
-			if (pChar[i])
+		if (pChar[i])
 			free(pChar[i]);
+/*
+	unsigned int *p = malloc(sizeof(unsigned int));
+	*p = 0x12345678;
+	unsigned int *np = realloc(p, 2*sizeof(unsigned int));
+	free(np);
+*/
 
 	exit(EXIT_SUCCESS);
 }
