@@ -4,11 +4,11 @@
 * Author: James Eli
 * Date: 11/13/2017
 *
-* This program performs a simple test of the memTracker memory allocation
-* tracking code. 
+* This program performs a simple test and demonstration of the memTracker 
+* memory allocation tracking code. 
 *
-* 1. We allocate the following memory: 4 separate characters, 1 integer 
-*    and 1 structure via calls to malloc().
+* 1. We allocate memory: 4 separate characters, 1 integer 
+*    and 1 structure via calls to malloc()/calloc().
 * 2. To demonstrate under/over run detection, the program will access
 *    memory above and below 2 of the character allocation addresses.
 * 3. To demonstrate using a pointer after it has been released, we free 
@@ -34,8 +34,6 @@
 // Add debug memory allocation routines.
 #include "memTracker.h"
 
-#define COUNT 4 // Number individual character allocations.
-
 #ifdef _MSC_VER
 // C/C++ Preprocessor Definitions: _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable:4996) 
@@ -51,17 +49,17 @@ struct test {
 int main(void) {
 	// Pointers used for testing memory allocation.
 	struct test *pStruct;
-	char *pChar[COUNT];
+	char *pChar[4];
 	int *pInt;
+	
+	// Redirect staderr output to a file.
+	//freopen("memTracker.txt", "w", stderr);
 
 	// Allocate memory via calling malloc().
-	for (int i = 0; i < COUNT; i++) {
-		pChar[i] = (char *)malloc(sizeof(char));
-		if (pChar[i] == NULL) {
-			printf("Error allocating memory.\n");
-			return EXIT_FAILURE;
-		}
-	}
+	pChar[0] = (char *)malloc(sizeof(char));
+	pChar[1] = (char *)malloc(sizeof(char));
+	pChar[2] = (char *)calloc(1, sizeof(char));
+	pChar[3] = (char *)calloc(1, sizeof(char));
 	pInt = (int *)malloc(sizeof(int) * 1024);
 	pStruct = (struct test *)malloc(sizeof(struct test));
 
@@ -69,21 +67,21 @@ int main(void) {
 	*(pChar[1] - 1) = 'X';	// Causes an under-run error.
 	*(pChar[2] + 1) = 'X';	// Causes an over-run error.
 
+	unsigned int *p = malloc(sizeof(unsigned int));
+	*p = 0x12345678;
+	unsigned int *np = realloc(p, 2 * sizeof(unsigned int));
+
+	reportAllocations();
+
 	free(pInt);
 	*pInt = 0x12345678;	    // Causes warning for memory access after free().
 	free(pStruct);
+	free(pChar[0]);
 	free(pChar[0]);         // Causes a previous memory free warning. 
-
-	// This loop doesn't free all the allocated memory, therefore producing a warning upon exit.
-	for (int i = 0; i < COUNT - 1; i++)
-		if (pChar[i])
-			free(pChar[i]);
-/*
-	unsigned int *p = malloc(sizeof(unsigned int));
-	*p = 0x12345678;
-	unsigned int *np = realloc(p, 2*sizeof(unsigned int));
+	free(pChar[1]);
+	free(pChar[2]);
+	//free(pChar[3]);       // Causes a warning that not all memory free'd.
 	free(np);
-*/
 
 	exit(EXIT_SUCCESS);
 }
