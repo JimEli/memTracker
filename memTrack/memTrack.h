@@ -42,8 +42,20 @@ typedef struct BLOCKINFO {
 	struct BLOCKINFO *pbiNext; // Pointer to next element in structure.
 	uint8_t *pMem;             // Memory pointer.
 	size_t size;               // Size of requested block.
-	bool free;                 // True if memory has been released.
+	unsigned char status;      // Block status bits (how allocated, realloc'd and free).
 } blockinfo;
+
+// Memory allocation status definitions.
+#define BLOCK_STATUS_UNKNOWN 0x00
+#define BLOCK_STATUS_MALLOC  0x01
+#define BLOCK_STATUS_CALLOC  0x02
+#define BLOCK_STATUS_REALLOC 0x04
+#define BLOCK_STATUS_FREE    0x08
+#define MAX_STATUS_BITS      4
+#define CHECK_BLOCK_MALLOC(var)  (var> & 1)
+#define CHECK_BLOCK_CALLOC(var)  ((var>>1) & 1)
+#define CHECK_BLOCK_REALLOC(var) ((var>>2) & 1)
+#define CHECK_BLOCK_FREE(var)    ((var>>3) & 1)
 
 // Memory allocation is expanded by padding amount (equally spaced before/after actual).
 #define MALLOC_PADDING        16 // Should be an even value.
@@ -65,13 +77,16 @@ void __Free(void *, char *, int);
 void __Exit(int const);
 
 // Additional function definitions (can be called outside of memTracker).
-size_t sizeOfBlock(uint8_t *);
+size_t sizeOfBlock(const uint8_t *);
+void reportAllocations(void);
 
 // Internal function definitions.
-static bool setMemoryStatus(void *);
-static bool createBlockInfo(uint8_t *, size_t);
-static blockinfo *getBlockInfo(uint8_t *);
-static void freeBlockInfo(uint8_t *);
+static bool setMemoryStatus(const void *);
+static unsigned char getBlockStatus(const void *);
+static bool createBlockInfo(uint8_t *, const size_t, const unsigned char);
+static void updateBlockInfo(const uint8_t *, uint8_t *, const size_t, const unsigned char);
+static blockinfo *getBlockInfo(const uint8_t *);
+static void freeBlockInfo(const uint8_t *);
 static void checkAllocations(void);
 static void *resizeMemory(void **, size_t, char *, int);
 
