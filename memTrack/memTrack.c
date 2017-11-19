@@ -196,6 +196,7 @@ static void *resizeMemory(void **ppv, size_t sizeNew, char *file, int line) {
 	if (sizeNew < sizeOld)
 		memset((*ppb) + sizeNew, _deadLandFill, sizeOld - sizeNew);
 /*
+	// This code will force realloc() to move new location.
 	else if (sizeNew > sizeOld) {
 		uint8_t *pForceNew;
 
@@ -295,17 +296,25 @@ void *__Calloc(size_t num, size_t size, char *file, int line) {
 
 // Our replacement for realloc().
 void *__Realloc(void *pMem, size_t size, char *file, int line) {
-	// If size is zero, then free memory.
+	// If size is zero, free the memory.
 	if (size == 0) {
+#ifdef VERBOSE
+		// Present warning that realloc called with size zero, which is same as calling free().
 		fprintf(stderr, "*** WARNING: realloc() called with 0 size: %s, line #%d\n", file, line);
+#endif
 		__Free(pMem, file, line);
 		return NULL;
 	}
 
 	// If pointer is NULL, then allocate new memory.
 	if (pMem == NULL) {
-		fprintf(stderr, "*** WARNING: realloc() called with 0 size: %s, line #%d\n", file, line);
-		return __Malloc(size, file, line);
+#ifdef VERBOSE
+		// Present warning realloc call with NULL pointer, which is same as calling malloc().
+		fprintf(stderr, "*** WARNING: realloc() called with NULL pointer: %s, line #%d\n", file, line);
+#endif
+		pMem = __Malloc(size, file, line);
+		updateBlockInfo(pMem, pMem, size, BLOCK_STATUS_REALLOC);
+		return pMem;
 	}
 
 	return resizeMemory(&pMem, size, file, line);
