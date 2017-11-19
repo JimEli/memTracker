@@ -35,7 +35,7 @@
 #ifdef _DEBUG
 
 // Define VERBOSE_OUTPUT (below) to recieve malloc/free debug prints.
-#define VERBOSE
+//#define VERBOSE
 
 // Memory allocation stats.
 typedef struct BLOCKINFO {
