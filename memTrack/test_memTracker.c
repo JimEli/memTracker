@@ -83,7 +83,9 @@ int main(void) {
 	//free(pChar[3]);       // Warning that all memory not free'd.
 	free(np);
 
+#ifdef DEBUG
 	reportAllocations();    // Print status report of all allocations.
+#endif
 
 	exit(EXIT_SUCCESS);     // Program exit calls our allocation check function.
 }
