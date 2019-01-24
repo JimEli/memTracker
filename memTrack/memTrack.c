@@ -29,35 +29,42 @@
 static blockinfo *pbiHead = NULL;
 
 // Check and designate pointer as free.
-bool setMemoryStatus(const void *pMem) {
+bool setMemoryStatus(const void *pMem) 
+{
 	blockinfo *pbi;
 
 	pbi = getBlockInfo((uint8_t *)pMem);
+
 	if (pbi->status & BLOCK_STATUS_FREE)
 		return false;
 	pbi->status |= BLOCK_STATUS_FREE;
+	
 	return true;
 }
 
 // Check and designate pointer as free.
-static unsigned char getBlockStatus(const void *pMem) {
+static unsigned char getBlockStatus(const void *pMem) 
+{
 	blockinfo *pbi;
 
 	pbi = getBlockInfo((uint8_t *)pMem);
+	
 	if (pbi != NULL)
 		return pbi->status;
 	return 0;
 }
 
 // Create a new blockinfo list entry for memory pointer.
-static bool createBlockInfo(uint8_t *pMem, const size_t size, const unsigned char status) {
+static bool createBlockInfo(uint8_t *pMem, const size_t size, const unsigned char status) 
+{
 	assert(pMem != NULL && size != 0);
 
 	// Reserve memory for new blockinfo list entry.
 	blockinfo *pbi = (blockinfo *)malloc(sizeof(blockinfo));
 
 	// Fill structure.
-	if (pbi != NULL) {
+	if (pbi != NULL) 
+	{
 		pbi->pMem = pMem;
 		pbi->size = size;
 		pbi->status = status;
@@ -70,13 +77,15 @@ static bool createBlockInfo(uint8_t *pMem, const size_t size, const unsigned cha
 }
 
 // Return blockinfo list element corresponding to memory pointer.
-static blockinfo *getBlockInfo(const uint8_t *pMem) {
+static blockinfo *getBlockInfo(const uint8_t *pMem) 
+{
 	blockinfo *pbi;
 
 	assert(pMem != NULL);
 
 	// Walk blockinfo list looking for match.
-	for (pbi = pbiHead; pbi != NULL; pbi = pbi->pbiNext) {
+	for (pbi = pbiHead; pbi != NULL; pbi = pbi->pbiNext) 
+	{
 		uint8_t *pbStart = pbi->pMem;
 		uint8_t *pbEnd = pbi->pMem + pbi->size - 1;
 		if (pMem >= pbStart && pMem <= pbEnd)
@@ -84,11 +93,13 @@ static blockinfo *getBlockInfo(const uint8_t *pMem) {
 	}
 
 	assert(pbi != NULL);
+
 	return (pbi);
 }
 
 // Update blockinfo entry for the memory pointer.
-static void updateBlockInfo(const uint8_t *pOld, uint8_t *pNew, const size_t sizeNew, const unsigned char status) {
+static void updateBlockInfo(const uint8_t *pOld, uint8_t *pNew, const size_t sizeNew, const unsigned char status) 
+{
 	assert(pNew != NULL && sizeNew != 0);
 
 	blockinfo *pbi = getBlockInfo(pOld);
@@ -99,12 +110,15 @@ static void updateBlockInfo(const uint8_t *pOld, uint8_t *pNew, const size_t siz
 }
 
 // Release the blockinfo entry for the memory pointer.
-static void freeBlockInfo(const uint8_t *pMem) {
+static void freeBlockInfo(const uint8_t *pMem) 
+{
 	blockinfo *pbi, *pbiPrev = NULL;
 
 	// Walk the blockinfo list looking for match.
-	for (pbi = pbiHead; pbi != NULL; pbi = pbi->pbiNext) {
-		if (pbi->pMem == pMem) {
+	for (pbi = pbiHead; pbi != NULL; pbi = pbi->pbiNext) 
+	{
+		if (pbi->pMem == pMem) 
+		{
 			// Matched a block, update links.
 			if (pbiPrev == NULL)
 				pbiHead = pbi->pbiNext;
@@ -126,24 +140,30 @@ static void freeBlockInfo(const uint8_t *pMem) {
 }
 
 // Return size of memory block associated with pointer.
-size_t sizeOfBlock(const uint8_t *pMem) {
+size_t sizeOfBlock(const uint8_t *pMem) 
+{
 	blockinfo *pbi = getBlockInfo(pMem);
 	assert(pMem == pbi->pMem);
 	return (pbi->size);
 }
 
 // Print report of _all_ memory allocations.
-void reportAllocations(void) {
+void reportAllocations(void) 
+{
 	blockinfo *pbi = pbiHead;
 
-	while (pbi != NULL) {
+	while (pbi != NULL) 
+	{
 		blockinfo *next = pbi->pbiNext;
-		if (pbi->pMem != NULL) {
+
+		if (pbi->pMem != NULL) 
+		{
 			// Block status descriptions.
 			char *blockStatus[4] = { "malloc ", "calloc ", "realloc ", "free " };
 
 			fprintf(stderr, "0x%X size: %d", (unsigned int)pbi->pMem, pbi->size);
 			fputs(" [ ", stderr);
+			
 			// Check all status bits.
 			for (uint8_t i = 0; i < MAX_STATUS_BITS; i++)
 				if (pbi->status & (1 << i))
@@ -156,16 +176,19 @@ void reportAllocations(void) {
 }
 
 // Check _all_ released memory for invalid access.
-static void checkAllocations(void) {
+static void checkAllocations(void) 
+{
 	blockinfo *pbi = pbiHead;
 
 	// Walk the allocated memory blockinfo list.
-	while (pbi != NULL) {
+	while (pbi != NULL) 
+	{
 		// First get pointer to next block.
 		blockinfo *next = pbi->pbiNext;
 
 		// If block exists...
-		if (pbi->pMem != NULL) {
+		if (pbi->pMem != NULL) 
+		{
 			// Get size of memory block.
 			size_t size = pbi->size;
 
@@ -188,7 +211,8 @@ static void checkAllocations(void) {
 	}
 }
 
-static void *resizeMemory(void **ppv, size_t sizeNew, char *file, int line) {
+static void *resizeMemory(void **ppv, size_t sizeNew, char *file, int line) 
+{
 	uint8_t **ppb = (uint8_t **)ppv;
 	uint8_t *pNew;
 	size_t sizeOld = sizeOfBlock(*ppb);
@@ -196,11 +220,13 @@ static void *resizeMemory(void **ppv, size_t sizeNew, char *file, int line) {
 	if (sizeNew < sizeOld)
 		memset((*ppb) + sizeNew, _deadLandFill, sizeOld - sizeNew);
 /*
-	// This code will force realloc() to move new location.
-	else if (sizeNew > sizeOld) {
+	// This code will force realloc() to move to a new location.
+	else if (sizeNew > sizeOld) 
+	{
 		uint8_t *pForceNew;
 
-		if ((pForceNew = __Malloc(sizeNew, file, line)) != NULL) {
+		if ((pForceNew = __Malloc(sizeNew, file, line)) != NULL) 
+		{
 			memcpy(pForceNew, *ppb, sizeOld);
 			__Free(*ppb, file, line);
 			*ppb = pForceNew;
@@ -208,8 +234,11 @@ static void *resizeMemory(void **ppv, size_t sizeNew, char *file, int line) {
 	}
 */
 	pNew = (uint8_t *)realloc(*ppb - MALLOC_START_OFFSET, sizeNew + MALLOC_PADDING);
-	if (pNew != NULL) {
-		if (pNew != *ppb) {
+	
+	if (pNew != NULL) 
+	{
+		if (pNew != *ppb) 
+		{
 			createBlockInfo((uint8_t *)pNew + MALLOC_START_OFFSET, sizeNew, getBlockStatus(*ppb) + BLOCK_STATUS_REALLOC);
 			freeBlockInfo(*ppb);
 		}
@@ -238,12 +267,14 @@ static void *resizeMemory(void **ppv, size_t sizeNew, char *file, int line) {
 }
 
 // Our replacement for malloc().
-void *__Malloc(size_t size, char *file, int line) {
+void *__Malloc(size_t size, char *file, int line) 
+{
 	// Attempt to allocate requested size + our below/above padding.
 	void *pMem = malloc(size + MALLOC_PADDING);
 
 	// Attempt to create an info block for this memory.
-	if (pMem != NULL && createBlockInfo((uint8_t *)pMem + MALLOC_START_OFFSET, size, BLOCK_STATUS_MALLOC)) {
+	if (pMem != NULL && createBlockInfo((uint8_t *)pMem + MALLOC_START_OFFSET, size, BLOCK_STATUS_MALLOC)) 
+	{
 		// Paint the memory as uninitailized.
 		memset(pMem, _cleanLandFill, size + MALLOC_PADDING);
 
@@ -262,16 +293,19 @@ void *__Malloc(size_t size, char *file, int line) {
 
 	// Failure.
 	fprintf(stderr, "*** WARNING: malloc() failure: %s, line #%d\n", file, line);
+	
 	return NULL;
 }
 
 // Our replacement for calloc().
-void *__Calloc(size_t num, size_t size, char *file, int line) {
+void *__Calloc(size_t num, size_t size, char *file, int line) 
+{
 	// Attempt to allocate requested size + our below/above padding.
 	void *pMem = calloc(num + MALLOC_PADDING, size);
 
 	// Attempt to create an info block for this memory.
-	if (pMem != NULL && createBlockInfo((uint8_t *)pMem + MALLOC_START_OFFSET, num*size, BLOCK_STATUS_CALLOC)) {
+	if (pMem != NULL && createBlockInfo((uint8_t *)pMem + MALLOC_START_OFFSET, num*size, BLOCK_STATUS_CALLOC)) 
+	{
 		// Paint the memory padding.
 		memset(pMem, _cleanLandFill, MALLOC_PADDING_LENGTH);
 		memset((uint8_t *)pMem + MALLOC_PADDING_LENGTH + num*size, _cleanLandFill, MALLOC_PADDING_LENGTH);
@@ -291,27 +325,35 @@ void *__Calloc(size_t num, size_t size, char *file, int line) {
 
 	// Failure.
 	fprintf(stderr, "*** WARNING: calloc() failure: %s, line #%d\n", file, line);
+	
 	return NULL;
 }
 
 // Our replacement for realloc().
-void *__Realloc(void *pMem, size_t size, char *file, int line) {
+void *__Realloc(void *pMem, size_t size, char *file, int line) 
+{
 	// If size is zero, free the memory.
-	if (size == 0) {
+	if (size == 0) 
+	{
+		
 #ifdef VERBOSE
 		// Present warning that realloc called with size zero, which is same as calling free().
 		fprintf(stderr, "*** WARNING: realloc() called with 0 size: %s, line #%d\n", file, line);
 #endif
+		
 		__Free(pMem, file, line);
 		return NULL;
 	}
 
 	// If pointer is NULL, then allocate new memory.
-	if (pMem == NULL) {
+	if (pMem == NULL) 
+	{
+
 #ifdef VERBOSE
 		// Present warning realloc call with NULL pointer, which is same as calling malloc().
 		fprintf(stderr, "*** WARNING: realloc() called with NULL pointer: %s, line #%d\n", file, line);
 #endif
+
 		pMem = __Malloc(size, file, line);
 		updateBlockInfo(pMem, pMem, size, BLOCK_STATUS_REALLOC);
 		return pMem;
@@ -322,8 +364,10 @@ void *__Realloc(void *pMem, size_t size, char *file, int line) {
 }
 
 // Our replacement for free().
-void __Free(void *pMem, char *file, int line) {
-	if (pMem) {
+void __Free(void *pMem, char *file, int line) 
+{
+	if (pMem) 
+	{
 		// Determine size of this memory block.
 		size_t size = sizeOfBlock(pMem);
 		assert(totalMemory >= size);
@@ -335,7 +379,8 @@ void __Free(void *pMem, char *file, int line) {
 #endif
 
 		// Check/designate this memory as free.
-		if (!setMemoryStatus(pMem)) {
+		if (!setMemoryStatus(pMem)) 
+		{
 			fprintf(stderr, "*** WARNING: 0x%p memory previously free'd.\n", pMem);
 			return;
 		}
@@ -363,7 +408,8 @@ void __Free(void *pMem, char *file, int line) {
 }
 
 // Our replacement for exit().
-void __Exit(int const status) {
+void __Exit(int const status) 
+{
 	// Check all released memory.	
 	checkAllocations();
 
