@@ -8,16 +8,16 @@
 * tracking code. 
 *
 * 1. We allocate the following memory: 4 separate characters, 2 integers 
-*    and 1 structure via calls to malloc()calloc().
+*    and 1 structure via calls to malloc() and calloc().
 * 2. To demonstrate under/over run detection, the program will access
 *    memory above and below 2 of the character allocation addresses.
 * 3. The integer pointer is re-allocated via a call to realloc().
 * 4. To demonstrate using a pointer after it has been released, we free 
-*    the integer pointer and then store a value using it's invalid pointer.
+*    the integer pointer and then store a value using the invalid pointer.
 * 5. Free is called twice using the same character pointer to activate the 
 *    warning associated with multiple calls to free using the same pointer.
 * 6. Finally, the program fails to free 1 character pointer prior to calling 
-*    exit() in order to demonstrate the warning associated with a memory 
+*    exit(). This demonstrates the warning associated with a memory 
 *    leak.
 *
 * Notes:
